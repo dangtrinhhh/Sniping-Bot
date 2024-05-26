@@ -1,0 +1,74 @@
+const ethers = require('ethers');
+const Web3 = require('web3');
+const fs = require('fs');
+
+// Đây là thông tin provider của network bạn muốn kết nối. Trong ví dụ là của testnet BSC. Những thông tin này bạn có thể tìm đơn giản trên document của họ
+const providerPath = "wss://bsc-mainnet.core.chainstack.com/ws/5cf621a34e450d8b7f93a3db5a64bd9b";
+const provider = new ethers.WebSocketProvider(providerPath);
+
+// mnemonic là từ khóa bí mật khi bạn tạo ví. Có thể là 12 từ hoặc 24 từ
+const mnemonic = "design dust ahead ball leg hidden response wall speed fiscal slim warrior"; // metamask
+
+let wallet, account;
+
+// Define the addresses object
+const addresses = {
+    factory: "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82", // factory contract address lấy từ bsc
+    SYMBOL: "BNB" // desired symbol, ví dụ "BNB"
+};
+
+async function init() {
+    // trong 1 cái ví bạn tưởng tượng thường có nhiều ngăn. Ở đây cũng vậy, wallet điện tử cũng sẽ có nhiều ngăn, một ngăn tương đương với một address khác nhau.
+    // "m/44'/60'/0'/0/0" là chỉ ra mình muốn lấy address ở vị trí đầu tiên index = 0
+    // nếu bạn muốn trỏ đến address vị trí thứ 2 thì sẽ là "m/44'/60'/0'/0/1"
+    wallet = ethers.Wallet.fromPhrase(mnemonic, "m/44'/60'/0'/0/0");
+    
+    // bắt đầu connect với ví trên blockchain
+    account = wallet.connect(provider);
+    console.log("🚀 ~ account:", account);
+    
+    factory = new ethers.Contract(
+        addresses.factory,
+        [
+            'event PairCreated(address indexed token0, address indexed token1, address pair, uint)'
+        ],
+        account
+    );
+}
+
+// get your balance
+async function getBalance() {
+    const balance = await account.provider.getBalance(account.address);
+    console.log("🚀 ~ balance:", balance);
+    const ethBalance = ethers.utils.formatUnits(balance, "ether");
+    console.log(`
+        ACCOUNT INFO
+        =================
+        Address: ${account.address}
+        Balance: ${ethBalance} ${addresses.SYMBOL}
+    `);
+}
+
+async function listenNewPair() {
+    factory.on('PairCreated', async (token0, token1, pairAddress) => {
+        // khi có cặp list sàn, thì hàm này sẽ được chạy và print cho chúng ta thông tin của cặp đó.
+        // token0: là địa chỉ của token mới được tạo hoặc cũng có thế là BNB
+        // token1: là địa chỉ của token mới được tạo hoặc cũng có thể là BNB
+        // nghĩa là nếu token0 là địa chỉ của BNB thì token1 là địa chỉ của token mới được tạo và ngược lại
+        // pairAddress: là địa chỉ của cặp thanh khoản
+        console.log(`
+            =================
+            token0: ${token0}
+            token1: ${token1}
+            pairAddress: ${pairAddress}
+            =================
+        `);
+    });
+}
+
+async function main() {
+    await init();
+    await listenNewPair();
+}
+
+main();
