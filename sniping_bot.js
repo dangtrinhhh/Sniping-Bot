@@ -13,7 +13,7 @@ let wallet, account;
 
 // Define the addresses object
 const addresses = {
-    factory: "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82", // factory contract address lấy từ bsc
+    factory: "0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73", // factory contract address lấy từ bsc
     SYMBOL: "BNB" // desired symbol, ví dụ "BNB"
 };
 
@@ -52,10 +52,10 @@ async function getBalance() {
     const balance = await account.provider.getBalance(account.address);
     const ethBalance = ethers.formatUnits(balance, "ether");
     console.log(`
-        ACCOUNT INFO
-        =================
-        Address: ${account.address}
-        Balance: ${ethBalance} ${addresses.SYMBOL}
+    ACCOUNT INFO
+    =================
+    Address: ${account.address}
+    Balance: ${ethBalance} ${addresses.SYMBOL}
     `);
 }
 
