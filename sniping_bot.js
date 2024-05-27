@@ -3,7 +3,7 @@ const Web3 = require('web3');
 const fs = require('fs');
 
 // Đây là thông tin provider của network bạn muốn kết nối. Trong ví dụ là của testnet BSC. Những thông tin này bạn có thể tìm đơn giản trên document của họ
-const providerPath = "wss://bsc-mainnet.core.chainstack.com/ws/5cf621a34e450d8b7f93a3db5a64bd9b";
+const providerPath = "wss://bsc-mainnet.core.chainstack.com/ws/5cf621a34e450d8b7f93a3db5a64bd9b"; // chainstack
 const provider = new ethers.WebSocketProvider(providerPath);
 
 // mnemonic là từ khóa bí mật khi bạn tạo ví. Có thể là 12 từ hoặc 24 từ
@@ -16,6 +16,17 @@ const addresses = {
     factory: "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82", // factory contract address lấy từ bsc
     SYMBOL: "BNB" // desired symbol, ví dụ "BNB"
 };
+
+const eth_getBlockByNumber = async () => {
+    const blockByNumber = await provider.send("eth_getBlockByNumber", ["pending", false]);
+    const transactions = blockByNumber.transactions;
+    const first20Transactions = transactions.slice(0, 20);
+    
+    //console.log("Transactions array:", transactions);
+    console.log("First 20 transactions:", first20Transactions);
+  };
+  
+eth_getBlockByNumber();
 
 async function init() {
     // trong 1 cái ví bạn tưởng tượng thường có nhiều ngăn. Ở đây cũng vậy, wallet điện tử cũng sẽ có nhiều ngăn, một ngăn tương đương với một address khác nhau.
@@ -36,11 +47,10 @@ async function init() {
     );
 }
 
-// get your balance
+// in thông tin ví
 async function getBalance() {
     const balance = await account.provider.getBalance(account.address);
-    console.log("🚀 ~ balance:", balance);
-    const ethBalance = ethers.utils.formatUnits(balance, "ether");
+    const ethBalance = ethers.formatUnits(balance, "ether");
     console.log(`
         ACCOUNT INFO
         =================
@@ -68,6 +78,7 @@ async function listenNewPair() {
 
 async function main() {
     await init();
+    await getBalance();
     await listenNewPair();
 }
 
