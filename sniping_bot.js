@@ -13,7 +13,7 @@ let wallet, account;
 
 // Define the addresses object
 const addresses = {
-    factory: "0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73", // factory contract address lấy từ bsc
+    factory: "0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73", // factory contract address lấy từ pancakeswap
     SYMBOL: "BNB" // desired symbol, ví dụ "BNB"
 };
 
@@ -67,12 +67,30 @@ async function listenNewPair() {
         // nghĩa là nếu token0 là địa chỉ của BNB thì token1 là địa chỉ của token mới được tạo và ngược lại
         // pairAddress: là địa chỉ của cặp thanh khoản
         console.log(`
-            =================
-            token0: ${token0}
-            token1: ${token1}
-            pairAddress: ${pairAddress}
-            =================
+        =================
+        token0: ${token0}
+        token1: ${token1}
+        pairAddress: ${pairAddress}
+        =================
         `);
+        
+        // Kiểm tra nếu cặp có BNB thì mới nhận
+        const BNB = "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c";
+
+        let tokenIn, tokenOut;
+        if(token0 === BNB) {
+          tokenIn = token0; 
+          tokenOut = token1;
+        }
+        
+        if(token1 == BNB) {
+          tokenIn = token1; 
+          tokenOut = token0;
+        }
+        
+        if(typeof tokenIn === 'undefined') {
+              return;
+        }
     });
 }
 
