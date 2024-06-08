@@ -101,13 +101,15 @@ async function listenNewPair() {
             const amountOutMin = 0;
             console.log("🚀 ~ amountOutMin:", amountOutMin.toString());
 
+            const getGasPrice = await provider.getFeeData()
+
             const tx = await router.swapExactETHForTokens(
                 amountOutMin,
                 [tokenIn, tokenOut],
                 account.address,
                 Math.floor(Date.now() / 1000) + 60 * 10, // 10 minutes from now
                 {
-                    gasPrice: await provider.getGasPrice(),
+                    gasPrice: getGasPrice.gasPrice,
                     gasLimit: 310000,
                     value: amountIn
                 }
