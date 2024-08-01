@@ -7,6 +7,12 @@ const TelegramBot = require('node-telegram-bot-api');
 const AccountUser = require('./models/AccountUser');
 // const modules = require('./modules');
 const crypto = require('crypto');
+const Bottleneck = require('bottleneck');
+
+// Khởi tạo Bottleneck với các thông số giới hạn
+const limiter = new Bottleneck({
+    minTime: 40 // Giới hạn tối thiểu thời gian giữa các lần gọi hàm là 40ms (25 lần mỗi giây)
+});
 
 const monitoredTransactions = new Set();
 let pendingTransactions;
@@ -204,21 +210,36 @@ async function transferToken(tokenIn, tokenOut, quantity) {
 }
 
 let count = 0;
-async function getTokenPriceInBNB(tokenAddress) {
-    // console.log("🚀 ~ tokenAddress:", tokenAddress);
+// Sử dụng limiter.wrap để giới hạn số lần gọi hàm
+const getTokenPriceInBNB = limiter.wrap(async (tokenAddress) => { // Thay đổi: Sử dụng limiter.wrap để bọc hàm
     try {
         const amountIn = ethers.parseUnits('1', 'ether'); // 1 Token
         const amounts = await router.getAmountsOut(amountIn, [tokenAddress, addresses.WBNB]); // WBNB address
         const tokenPriceInBNB = ethers.formatUnits(amounts[1], 'ether');
         count++;
         console.log("🚀 ~ _______________Lấy giá lần thứ ", count);
-
         return tokenPriceInBNB;
     } catch (error) {
         console.log("🚀 ~ Lỗi khi lấy giá:", error);
         return null;
     }
-}
+});
+
+// async function getTokenPriceInBNB(tokenAddress) {
+//     // console.log("🚀 ~ tokenAddress:", tokenAddress);
+//     try {
+//         const amountIn = ethers.parseUnits('1', 'ether'); // 1 Token
+//         const amounts = await router.getAmountsOut(amountIn, [tokenAddress, addresses.WBNB]); // WBNB address
+//         const tokenPriceInBNB = ethers.formatUnits(amounts[1], 'ether');
+//         count++;
+//         console.log("🚀 ~ _______________Lấy giá lần thứ ", count);
+
+//         return tokenPriceInBNB;
+//     } catch (error) {
+//         console.log("🚀 ~ Lỗi khi lấy giá:", error);
+//         return null;
+//     }
+// }
 
 async function transferTokenWithPriceCheck(user, bot, chatId, index, tokenIn, tokenOut, quantity, targetPrice, checkInterval = 5000) {
     // console.log("🚀 ~ quantity:", quantity)
@@ -265,7 +286,7 @@ async function transferTokenWithPriceCheck(user, bot, chatId, index, tokenIn, to
                     saveUserInfo(chatId, user);
                 } else {
                     console.log(`Current price (${priceToken}) is below target price (${targetPrice}). Checking again in ${checkInterval / 1000} seconds...`);
-                    setTimeout(checkPriceAndTransfer, checkInterval);
+                    setTimeout(checkPriceAndTransfer, checkInterval / 1000);
                 }
             } catch (error) {
                 console.log('Lỗi khi lấy giá hoặc thực hiện giao dịch:', error);
@@ -279,8 +300,7 @@ async function transferTokenWithPriceCheck(user, bot, chatId, index, tokenIn, to
 
                 // Xóa giao dịch Fail khỏi hàng chờ:
                 monitoredTransactions.delete(user.transactions[index].id);
-
-                setTimeout(checkPriceAndTransfer, checkInterval); // Retry after the interval
+                console.log("🚀 ~ monitoredTransactions:", monitoredTransactions)
             }
         }
 
@@ -295,7 +315,7 @@ async function monitorTransactions(user, bot, transactions, chatId, secretKey, d
     // Filter pending transactions
     pendingTransactions = transactions.filter(ts => ts.status === "pending");
     console.log("🚀 ~ pendingTransactions:", pendingTransactions);
-
+    
     // Monitor each transaction asynchronously
     for (let i = 0; i < pendingTransactions.length; i++) {
         if (!monitoredTransactions.has(pendingTransactions[i]['id'])) {
@@ -479,7 +499,10 @@ bot.on('callback_query', async (callbackQuery) => {
             bot.sendMessage(chatId, '👉 Vui lòng nhập Private Key của bạn:');
             break;
         case 'remove_wallet':
-            dataUserCallback.secretKey = dataUserCallback.address = "";
+            if ( dataUserCallback.secretKey &&  dataUserCallback.address) {
+                dataUserCallback.secretKey = "";
+                dataUserCallback.address = "";
+            }
             saveUserInfo(chatId, dataUserCallback);
             bot.sendMessage(chatId, '✅ Xóa ví thành công!');
             break;
@@ -521,7 +544,7 @@ bot.on('callback_query', async (callbackQuery) => {
                 break;
             }
 
-            let editTransactions = dataUserCallback.transactions.filter(ts => ts.status === "pending");
+            let editTransactions = dataUserCallback.transactions.filter(ts => ts.status !== "success");
             userState.editTransactions = editTransactions;
             
             bot.sendMessage(chatId, `✅ Đây là thông tin các giao dịch của bạn: \n${getTransactionsTable(editTransactions)}`);
@@ -559,6 +582,7 @@ bot.on('message', async (msg) => {
 
     switch (command) {
         case '/start':
+        case '/menu':
         case '/help':
             bot.sendMessage(chatId, '👉 Vui lòng chọn một trong các tùy chọn bên dưới:', getMainMenu());
             break;
