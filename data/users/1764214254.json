@@ -1,40 +1,29 @@
 {
   "secretKey": "0x3e9a320787cc04c8cc34b31d8c0dfe3004d33b8dfc536374db149b84f9311a98",
   "address": "0xC335D1Cc6DE28BE4eF603d66d50CA424c887143e",
-  "balance": "0.001022390756720692",
+  "balance": "0.004692367343832948",
   "transactions": [
     {
-      "id": 1,
-      "type": "Mua",
+      "type": "mua",
       "tokenAddress": "0x2170Ed0880ac9A755fd29B2688956BD959F933F8",
-      "quantity": 0.001,
+      "quantity": 0.0004,
       "condition": "price",
-      "targetPrice": "5.8",
-      "timeCreated": "2024-06-17T04:36:14.309Z",
+      "targetPrice": 0.0001,
+      "timeCreated": "16:16:21 31/07/2024",
       "timeCompleted": "",
-      "status": "pending"
+      "status": "fail",
+      "id": "527a7aea5cfe87ff3dca3e1cb0962d4c01b78626dfceefe38610378130a35c22"
     },
     {
-      "id": 2,
-      "type": "Bán",
+      "type": "mua",
       "tokenAddress": "0x2170Ed0880ac9A755fd29B2688956BD959F933F8",
-      "quantity": 0.001,
+      "quantity": 0.00085,
       "condition": "price",
-      "targetPrice": "5.8",
-      "timeCreated": "2024-06-17T04:36:14.309Z",
+      "targetPrice": 0.1,
+      "timeCreated": "16:12:35 31/07/2024",
       "timeCompleted": "",
-      "status": "pending"
-    },
-    {
-      "id": 3,
-      "type": "Bán",
-      "tokenAddress": "0x09A6296427f0C1a57f114355dC6C20b558aF1243",
-      "quantity": 2,
-      "condition": "rate",
-      "targetPrice": 2,
-      "timeCreated": "2024-06-15T16:10:26.095Z",
-      "timeCompleted": "2024-06-15T16:15:22.035Z",
-      "status": "success"
+      "status": "fail",
+      "id": "0de424c4e89759f28f954447d7fa3da7a73e36b34c745919fd9fb4c3830bd5be"
     }
   ],
   "chatId": 1764214254
